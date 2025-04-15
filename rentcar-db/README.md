@@ -117,3 +117,6 @@
 | 차량-보상이력 | CAR (선택) | COMPENSATION (필수) | 1:N |
 | 대여-사고이력 | RENTAL (선택) | ACCIDENT (선택) | 1:N |
 | 차량-사고이력 | CAR (선택) | ACCIDENT (필수) | 1:N |
+
+#### ERD
+![](image%2Fcar_rental_erd_enhanced.svg)
