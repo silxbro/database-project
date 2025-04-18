@@ -121,3 +121,69 @@
 #### ▶︎ ERD
 <img src="image%2Fcar_rental_erd_enhanced.svg" width="750" />
 
+### [2] 논리적 설계
+#### [CUSTOMER (고객)]
+| 컬럼명     | 컬럼 설명     | 데이터 타입 | 길이 | NULL 여부 | PK  | FK  | 비고             |
+|------------|---------------|-------------|------|-----------|-----|-----|------------------|
+| customer_id | 고객 ID       | INT         | -    | NOT NULL  | ●   |     | AUTO_INCREMENT   |
+| name        | 고객 이름     | VARCHAR     | 50   | NOT NULL  |     |     |                  |
+| type        | 고객 유형     | VARCHAR     | 20   | NOT NULL  |     |     | 개인/법인        |
+| phone       | 휴대전화번호  | VARCHAR     | 20   | NOT NULL  |     |     | '-' 포함 가능     |
+| email       | 이메일        | VARCHAR     | 100  | NULL      |     |     |                  |
+
+#### [CAR (차량)]
+| 컬럼명     | 컬럼 설명     | 데이터 타입 | 길이 | NULL 여부 | PK  | FK  | 비고                        |
+|------------|---------------|-------------|------|-----------|-----|-----|-----------------------------|
+| car_id      | 차량 ID       | INT         | -    | NOT NULL  | ●   |     | AUTO_INCREMENT             |
+| car_number  | 차량 번호     | VARCHAR     | 20   | NOT NULL  |     |     | UNIQUE                     |
+| model       | 차량 모델     | VARCHAR     | 50   | NOT NULL  |     |     |                             |
+| fuel_type   | 연료 유형     | VARCHAR     | 20   | NOT NULL  |     |     |                           |
+| year        | 연식         | INT         | -    | NOT NULL  |     |     |                           |
+| mileage     | 주행 거리     | INT         | -    | NOT NULL  |     |     | km 단위                    |
+| seat_count  | 좌석 수       | INT         | -    | NOT NULL  |     |     |                             |
+| branch_id   | 관리 지점 ID  | INT         | -    | NULL      |     | ●   | BRANCH 참조                |
+| status      | 차량 상태     | VARCHAR     | 20   | NOT NULL  |     |     |                      |
+
+#### [DRIVER (운전자)]
+| 컬럼명         | 컬럼 설명     | 데이터 타입 | 길이 | NULL 여부 | PK  | FK  | 비고                        |
+|----------------|---------------|-------------|------|-----------|-----|-----|-----------------------------|
+| driver_id       | 운전자 ID     | INT         | -    | NOT NULL  | ●   |     | AUTO_INCREMENT             |
+| customer_id     | 고객 ID       | INT         | -    | NULL      |     | ●   | CUSTOMER 참조               |
+| name            | 이름          | VARCHAR     | 50   | NOT NULL  |     |     |                             |
+| birth_date      | 생년월일      | DATE        | -    | NOT NULL  |     |     | YYYY-MM-DD 형식             |
+| license_type    | 면허 구분     | VARCHAR     | 20   | NOT NULL  |     |     | 1종/2종                  |
+| license_class   | 면허 종류     | VARCHAR     | 20   | NOT NULL  |     |     | 보통/대형             |
+| license_number  | 면허 번호     | VARCHAR     | 50   | NOT NULL  |     |     |                             |
+| issue_date      | 발급일        | DATE        | -    | NOT NULL  |     |     |                             |
+| expiry_date     | 유효기한      | DATE        | -    | NOT NULL  |     |     |                             |
+
+#### [RENTAL (대여)]
+| 컬럼명                 | 컬럼 설명       | 데이터 타입 | 길이 | NULL 여부 | PK  | FK  | 비고                     |
+|------------------------|------------------|-------------|------|-----------|-----|-----|--------------------------|
+| rental_id              | 계약 ID     | INT         | -    | NOT NULL  | ●   |     | AUTO_INCREMENT          |
+| driver_id              | 대표운전자 ID   | INT         | -    | NOT NULL  |     | ●   | DRIVER 참조              |
+| car_id                 | 차량 ID          | INT         | -    | NOT NULL  |     | ●   | CAR 참조                 |
+| start_datetime         | 대여 시작일시    | DATETIME    | -    | NOT NULL  |     |     |                          |
+| expected_return_datetime | 반납 예정일시  | DATETIME    | -    | NOT NULL  |     |     |                          |
+| actual_return_datetime | 실제 반납일시    | DATETIME    | -    | NULL      |     |     |                          |
+| insurance_yn           | 보험 적용 여부   | BOOLEAN     | -    | NOT NULL  |     |     |                          |
+| fuel_start             | 대여시 유류량   | DECIMAL(5,2)| -    | NOT NULL  |     |     |                          |
+| fuel_end               | 반납시 유류량   | DECIMAL(5,2)| -    | NULL      |     |     |                          |
+| status                 | 대여 상태        | VARCHAR     | 20   | NOT NULL  |     |     |                    |
+
+#### [PAYMENT (결제)]
+| 컬럼명            | 컬럼 설명       | 데이터 타입 | 길이 | NULL 여부 | PK  | FK  | 비고               |
+|-------------------|------------------|-------------|------|-----------|-----|-----|--------------------|
+| payment_id         | 결제 ID          | INT         | -    | NOT NULL  | ●   |     | AUTO_INCREMENT     |
+| rental_id          | 대여 계약 ID     | INT         | -    | NOT NULL  |     | ●   | RENTAL 참조        |
+| payment_datetime   | 결제 일시        | DATETIME    | -    | NOT NULL  |     |     |                    |
+| payment_status     | 결제 상태        | VARCHAR     | 20   | NOT NULL  |     |     |                 |
+| payment_type       | 결제 유형        | VARCHAR     | 20   | NOT NULL  |     |     |                  |
+| method             | 결제 수단        | VARCHAR     | 20   | NOT NULL  |     |     |                   |
+| total_amount       | 총 결제 금액     | INT         | -    | NOT NULL  |     |     |                    |
+| rental_amount      | 대여 금액        | INT         | -    | NOT NULL  |     |     |                    |
+| insurance_amount   | 보험료           | INT         | -    | NULL      |     |     |                    |
+| discount_amount    | 할인 금액        | INT         | -    | NULL      |     |     |                    |
+| mileage_used       | 마일리지 사용액  | INT         | -    | NULL      |     |     |                    |
+| extra_amount       | 추가 결제 금액   | INT         | -    | NULL      |     |     |                    |
+| compensation_amount| 보상금           | INT         | -    | NULL      |     |     |                    |
