@@ -119,7 +119,7 @@
 | 차량-사고이력 | CAR (선택) | ACCIDENT (필수) | 1:N |
 
 #### ▶︎ ERD
-<img src="image%2Fcar_rental_erd_enhanced.svg" width="750" />
+<img src="image%2Frentcar_erd.svg" width="750" />
 
 ### [2] 논리적 설계
 #### [CUSTOMER (고객)]
