@@ -37,7 +37,7 @@ def random_email(i):
 
 def random_birth_date():
   start_date = datetime(1955, 1, 1)
-  end_date = datetime(2005, 12, 31)
+  end_date = datetime(2005, 9, 30)
   delta = end_date - start_date
   return (start_date + timedelta(days=random.randint(0, delta.days))).date()
 
