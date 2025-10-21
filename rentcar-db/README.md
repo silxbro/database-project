@@ -18,5 +18,5 @@
 - 스크립트/자동화: Shell Script, Python
 - 운영 환경: AWS Aurora, AWS RDS
 
-### ERD
+### 🖥️ ERD
 <img src="https://github.com/user-attachments/assets/b5b6ea1b-df97-4fc6-acc1-40a9e4e8183c" width="1500" />
