@@ -19,4 +19,4 @@
 - 운영 환경: AWS Aurora, AWS RDS
 
 ### 🖥️ ERD
-<img src="https://github.com/user-attachments/assets/b5b6ea1b-df97-4fc6-acc1-40a9e4e8183c" width="1500" />
+<img src="https://github.com/user-attachments/assets/a28618da-4206-4a4a-a934-a73d2affa4be" width="1500" />
