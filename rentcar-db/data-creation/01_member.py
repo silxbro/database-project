@@ -1,94 +1,136 @@
 import mysql.connector
 from datetime import datetime, timedelta
 import random
+import string
 
-# DB 연결 설정
+# 1. DB 연결 설정
 conn = mysql.connector.connect(
     host='localhost',
-    user='root',
-    password='ehpark',
-    database='rentcar',
+    user='ehpark',
+    password='ehPark9463!',
+    database='rentcar_db',
 )
 cursor = conn.cursor()
 
-TOTAL_COUNT = 200000
+TOTAL_COUNT = 500000
 BATCH_SIZE = 10000
 
-# 상태 비율 설정
-status_choices = ['ACTIVE']*70 + ['WITHDRAWN']*20 + ['DORMANT']*5 + ['SUSPENDED']*5
+# [데이터 다양화] 한국 성씨와 이름 구성요소
+LAST_NAMES = ['Kim', 'Lee', 'Park', 'Choi', 'Jung', 'Kang', 'Cho', 'Yoon', 'Jang', 'Lim', 'Han', 'Oh', 'Seo', 'Shin', 'Kwon', 'Hwang', 'An', 'Song', 'Ryu', 'Jeon']
+FIRST_NAME_CHARS = ['min', 'jun', 'seo', 'yun', 'ji', 'hye', 'woo', 'jin', 'soo', 'ha', 'eun', 'sun', 'young', 'hyun', 'chan', 'jae', 'ho', 'beom', 'ri', 'na']
 
-# 중복 방지용 세트
+# [중복 방지] 기존 데이터 로드
+used_ids = set()
 used_phones = set()
 used_emails = set()
 
-def random_phone(i):
+cursor.execute("SELECT account_id, phone, email FROM MEMBER")
+for row in cursor.fetchall():
+  used_ids.add(row[0])
+  used_phones.add(row[1])
+  used_emails.add(row[2])
+
+def generate_real_name():
+  """현실적인 한국인 이름 생성 (예: Kim Min-jun)"""
+  last = random.choice(LAST_NAMES)
+  # 이름은 보통 두 글자 조합이 많으므로 무작위 조합
+  first = random.choice(FIRST_NAME_CHARS) + random.choice(FIRST_NAME_CHARS)
+  # 첫 글자 대문자 처리
+  return f"{last} {first.capitalize()}"
+
+def generate_unique_account_id():
+  chars = string.ascii_letters + string.digits
   while True:
-    rand_num = (1103515245 * i + 12345) % 100000000
-    num_str = f"{rand_num:08d}"
-    phone = f"010-{num_str[:4]}-{num_str[4:]}"
+    length = random.randint(8, 15)
+    acc_id = ''.join(random.choice(chars) for _ in range(length))
+    if acc_id not in used_ids:
+      used_ids.add(acc_id)
+      return acc_id
+
+def generate_unique_email():
+  chars = string.ascii_lowercase + string.digits
+  while True:
+    length = random.randint(8, 15)
+    prefix = ''.join(random.choice(chars) for _ in range(length))
+    domain = random.choice(['gmail.com', 'naver.com', 'daum.net', 'kakao.com', 'outlook.com'])
+    email = f"{prefix}@{domain}"
+    if email not in used_emails:
+      used_emails.add(email)
+      return email
+
+def generate_unique_phone():
+  while True:
+    phone = f"010-{random.randint(2000, 9999)}-{random.randint(1000, 9999)}"
     if phone not in used_phones:
       used_phones.add(phone)
       return phone
 
-def random_email(i):
-  # 이메일은 인덱스를 이용해 고유하게 생성
-  email = f"user{i:08d}@mail.com"
-  return email
+def generate_account_pw():
+  special_chars = r"""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
+  length = random.randint(10, 20)
+  pw = [
+    random.choice(string.ascii_uppercase),
+    random.choice(string.ascii_lowercase),
+    random.choice(string.digits),
+    random.choice(special_chars)
+  ]
+  all_pool = string.ascii_letters + string.digits + special_chars
+  pw += [random.choice(all_pool) for _ in range(length - 4)]
+  random.shuffle(pw)
+  return ''.join(pw)
 
-def random_birth_date():
-  start_date = datetime(1955, 1, 1)
-  end_date = datetime(2005, 9, 30)
-  delta = end_date - start_date
-  return (start_date + timedelta(days=random.randint(0, delta.days))).date()
+def random_date(start_year, end_year):
+  start = datetime(start_year, 1, 1)
+  end = datetime(end_year, 12, 31)
+  delta = end - start
+  return (start + timedelta(days=random.randint(0, delta.days))).date()
 
-def random_join_date():
-  start_date = datetime(2020, 1, 1)
-  end_date = datetime(2025, 9, 30)
-  delta = end_date - start_date
-  return (start_date + timedelta(days=random.randint(0, delta.days))).date()
-
-def random_withdraw_date(join_date):
-  # 가입일 이후 ~ 오늘 사이
-  today = datetime.today().date()
-  delta = today - join_date
-  if delta.days <= 0:
-    return join_date
-  return join_date + timedelta(days=random.randint(1, delta.days))
-
-def random_gender():
-  return random.choice(['M', 'F'])
-
-def generate_records(start_idx, count):
+def generate_records(count):
   records = []
-  for i in range(start_idx, start_idx + count):
-    account_id = f"acc{i:08d}"
-    account_pw = f"pw{i:08d}"
-    member_name = f"user{i:08d}"
-    birth_date = random_birth_date()
-    gender = random_gender()
-    phone = random_phone()
-    email = random_email(i)
-    join_date = random_join_date()
+  status_choices = ['ACTIVE']*80 + ['WITHDRAWN']*10 + ['DORMANT']*5 + ['SUSPENDED']*5
+
+  for _ in range(count):
+    acc_id = generate_unique_account_id()
+    acc_pw = generate_account_pw()
+    m_name = generate_real_name()  # [핵심] 실명 생성 함수 호출
+    phone = generate_unique_phone()
+    email = generate_unique_email()
+
+    join_date = random_date(2020, 2025)
     status = random.choice(status_choices)
-    withdraw_date = random_withdraw_date(join_date) if status == 'WITHDRAWN' else None
+    withdraw_date = None
+
+    if status == 'WITHDRAWN':
+      today = datetime.today().date()
+      days_diff = (today - join_date).days
+      withdraw_date = join_date + timedelta(days=random.randint(1, max(1, days_diff)))
+
     records.append((
-      account_id, account_pw, member_name, birth_date, gender, phone, email, join_date, withdraw_date, status
+      acc_id, acc_pw, m_name, random_date(1960, 2005),
+      random.choice(['M', 'F']), phone, email, join_date, withdraw_date, status
     ))
   return records
 
-# 배치 삽입
-for batch_start in range(1, TOTAL_COUNT + 1, BATCH_SIZE):
-  batch_count = min(BATCH_SIZE, TOTAL_COUNT - batch_start + 1)
-  data = generate_records(batch_start, batch_count)
-  sql = """
-    INSERT INTO MEMBER
-    (account_id, account_pw, member_name, birth_date, gender, phone, email, join_date, withdraw_date, status)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
-  cursor.executemany(sql, data)
-  conn.commit()
-  print(f"{batch_start + batch_count -1} / {TOTAL_COUNT} records inserted")
+# 데이터 삽입 실행
+try:
+  current_total = 0
+  while current_total < TOTAL_COUNT:
+    data = generate_records(BATCH_SIZE)
+    sql = """
+            INSERT INTO MEMBER 
+            (account_id, account_pw, member_name, birth_date, gender, phone, email, join_date, withdraw_date, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+    cursor.executemany(sql, data)
+    conn.commit()
+    current_total += BATCH_SIZE
+    print(f"{current_total} / {TOTAL_COUNT} records inserted")
 
-cursor.close()
-conn.close()
-print("Data generation completed!")
+except Exception as e:
+  print(f"Error: {e}")
+  conn.rollback()
+finally:
+  cursor.close()
+  conn.close()
+
+print("MEMBER data generation completed!")

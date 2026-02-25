@@ -1,13 +1,13 @@
 import mysql.connector
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 # MySQL 연결
 conn = mysql.connector.connect(
     host="localhost",
-    user="root",
-    password="ehpark",
-    database="rentcar",
+    user="ehpark",
+    password="ehPark9463!",
+    database="rentcar_db",
 )
 cursor = conn.cursor()
 
@@ -17,8 +17,8 @@ def random_date(start, end):
   return start + timedelta(days=random.randint(0, delta.days))
 
 start_date = datetime(2020, 1, 1)
-end_date = datetime(2025, 6, 30)
-del_end_date = datetime(2025, 9, 30)
+end_date = datetime(2025, 12, 31)
+del_end_date = datetime(2025, 12, 31)
 
 # CAR_MODEL 데이터
 car_models = [
@@ -96,8 +96,8 @@ INSERT INTO CAR_MODEL (car_model_type, car_model_base, maker_name, fuel_type, se
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 """
 
-for model in car_models:
-  car_model_type, car_model_base, maker_name, fuel_type, seat_count = model
+for car_model in car_models:
+  car_model_type, car_model_base, maker_name, fuel_type, seat_count = car_model
 
   # 상태 랜덤 부여 (등록 95%, 삭제 5%)
   status = "ACTIVE" if random.random() < 0.95 else "DELETED"
@@ -120,4 +120,4 @@ conn.commit()
 cursor.close()
 conn.close()
 
-print(f"{len(car_models)} rows inserted successfully.")
+print(f"{len(car_models)} CAR_MODEL data generation completed!")
