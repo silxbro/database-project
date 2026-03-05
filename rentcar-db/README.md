@@ -12,11 +12,15 @@
 - **통계 및 분석**: 기간/고객특성/지점별 대여 건수, 매출 현황, 인기 차종 등 대시보드 제공
 
 ### 🛠️ 기술 스택
-- DBMS: Oracle 19c, MySQL 8.0, PostgreSQL
+- DBMS: MySQL 8.0
 - 데이터 모델링: ERDCloud
 - 성능 분석: AWR Report, Explain Plan, Autotrace
 - 스크립트/자동화: Shell Script, Python
-- 운영 환경: AWS Aurora, AWS RDS
+- 운영 환경: Linux, AWS RDS
+
+### 🧑🏻‍💻 작업 내용
+- **[◼︎ 데이터베이스 설계](https://github.com/silxbro/database-project/blob/main/rentcar-db/docs/01_%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4-%EC%84%A4%EA%B3%84.md)**
+- **[◼︎ 데이터베이스 구축](https://github.com/silxbro/database-project/blob/main/rentcar-db/docs/02_%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4-%EA%B5%AC%EC%B6%95.md)**
 
 ### 🖥️ ERD
 <img src="https://github.com/user-attachments/assets/a28618da-4206-4a4a-a934-a73d2affa4be" width="1500" />
