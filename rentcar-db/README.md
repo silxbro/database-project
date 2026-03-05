@@ -23,4 +23,4 @@
 - **[◼︎ 데이터베이스 구축](https://github.com/silxbro/database-project/blob/main/rentcar-db/docs/02_%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4-%EA%B5%AC%EC%B6%95.md)**
 
 ### 🖥️ ERD
-<img src="https://github.com/user-attachments/assets/a28618da-4206-4a4a-a934-a73d2affa4be" width="1500" />
+<img src="https://github.com/user-attachments/assets/133c35fc-b0a0-4143-b9b8-4e66273feda1" width="1500" />
