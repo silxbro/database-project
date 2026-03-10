@@ -66,30 +66,45 @@ def generate_records(start_idx, count):
     reg_date = global_start + timedelta(days=random.randint(0, total_days))
 
     # [핵심 2] 해당 등록 날짜에 '생산 가능했던' 모델들만 필터링
-    # 즉, 모델의 등록일 <= 차량의 등록일 && (모델 삭제일이 없거나 >= 차량의 등록일)
     available_models = [
       m for m in car_models
-      if m['parsed_reg_date'] <= reg_date and (m['parsed_del_date'] is None or m['parsed_del_date'] >= reg_date)
+      if m['parsed_reg_date'] <= reg_date and (m['parsed_del_date'] is None or m['parsed_del_date'] > reg_date)
     ]
 
-    # 만약 해당 날짜에 가능한 모델이 하나도 없다면 전체 모델 중 하나 선택 (방어 코드)
     if not available_models:
       car_model = random.choice(car_models)
+      # 방어 코드: 모델 등록일이 선택된 reg_date보다 늦다면 reg_date를 모델 등록일로 조정
+      if car_model['parsed_reg_date'] > reg_date:
+        reg_date = car_model['parsed_reg_date']
     else:
       car_model = random.choice(available_models)
 
     car_model_id = car_model['car_model_id']
 
-    # [핵심 3] 삭제일(del_date) 설정 (원본 제약 유지)
+    # ---------------------------------------------------------
+    # ✅ 조건 1: CAR_MODEL.reg_date <= CAR.reg_date < CAR.del_date <= CAR_MODEL.del_date
+    # ---------------------------------------------------------
     final_del_date = None
     if random.random() < deleted_ratio:
+      # 삭제일 하한선: 등록일 + 180일 (최소 운행 기간)
       min_del_date = reg_date + timedelta(days=180)
-      if min_del_date <= global_end:
-        days_diff = (global_end - min_del_date).days
+
+      # 삭제일 상한선: 모델의 del_date가 있다면 그 날짜, 없다면 2025-12-31
+      limit_del_date = car_model['parsed_del_date'] if car_model['parsed_del_date'] else global_end
+
+      # 만약 상한선이 하한선보다 빠르다면 상한선을 하한선에 맞춤 (데이터 무결성)
+      if limit_del_date <= min_del_date:
+        final_del_date = limit_del_date
+      else:
+        days_diff = (limit_del_date - min_del_date).days
         final_del_date = min_del_date + timedelta(days=random.randint(0, days_diff))
 
+    # ---------------------------------------------------------
+    # ✅ 조건 2: CAR.car_year = YEAR(reg_date)
+    # ---------------------------------------------------------
+    car_year = reg_date.year  # YEAR(reg_date) 추출
+
     branch_id = random.choice(branch_ids)
-    car_year = random_year()
     status = 'DELETED' if final_del_date else 'ACTIVE'
     car_number = generate_car_number(i)
     car_mileage = random_mileage()

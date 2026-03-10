@@ -32,7 +32,8 @@ def generate_staff_number(hire_date):
 def random_email(full_name, s_num):
   name_part = full_name.lower().replace(' ', '')
   year_part = s_num[:2]
-  email = f"{name_part}{year_part}@dbrentcar.com"
+  last_part = s_num[9:]
+  email = f"{name_part}{year_part}{last_part}@dbrentcar.com"
 
   counter = 1
   original_email = email
@@ -49,9 +50,9 @@ def random_date(start: date, end: date) -> date:
   return start + timedelta(days=random.randint(0, delta))
 
 def random_name():
-  surnames = ["Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Yoon", "Lim", "Han", "Oh"]
-  first = ["Ji", "Hyun", "Min", "Soo", "Hye", "Young", "Dong", "Sang", "Seok", "Jae"]
-  second = ["Ah", "Bin", "Yeon", "Jin", "Hwa", "Hee", "Kyung", "Sung", "Won", "Na"]
+  surnames = ["Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Yoon", "Lim", "Han", "Oh", "Seo", "Yang", "Joo", "Cha"]
+  first = ["Ji", "Hyun", "Min", "Soo", "Hye", "Young", "Dong", "Sang", "Seok", "Jae", "Eun", "Kyung"]
+  second = ["Ah", "Bin", "Yeon", "Jin", "Hwa", "Hee", "Kyung", "Sung", "Won", "Na", "Soo"]
   return random.choice(surnames) + " " + random.choice(first) + random.choice(second)
 
 # =========================

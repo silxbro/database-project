@@ -11,7 +11,7 @@ conn = mysql.connector.connect(
 )
 cursor = conn.cursor()
 
-# 2. 지역별 상세 소스 (랜드마크와 상세 동네 이름 조합)
+# 2. 지역별 상세 소스
 locations = [
   {"city": "Seoul", "pref": "02", "spots": ["Gasan Digital", "Gangnam Station", "Hongdae", "Yeouido", "Seoul Station", "Jamsil", "Suyu", "Magok"],
    "lat": (37.48, 37.58), "lng": (126.88, 127.05)},
@@ -25,16 +25,19 @@ locations = [
    "lat": (33.25, 33.50), "lng": (126.30, 126.85)}
 ]
 
-# 3. 상태값 비율 (80:10:10)
+# 3. 상태값 설정
 total_count = 100
 statuses = (["ACTIVE"] * 80) + (["PAUSED"] * 10) + (["CLOSED"] * 10)
 random.shuffle(statuses)
 
-# 중복 체크용 셋
 used_names = set()
 used_phones = set()
 
-# 4. 데이터 생성 루프
+# 4. 날짜 범위 상수 설정
+START_DATE = date(2020, 1, 1)
+OPEN_LIMIT_DATE = date(2025, 6, 30)
+END_OF_2025 = date(2025, 12, 31)
+
 insert_sql = """
 INSERT INTO BRANCH (branch_name, address, latitude, longitude, phone, open_time, close_time, open_date, close_date, status)
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -45,27 +48,20 @@ while count < total_count:
   reg = random.choice(locations)
   spot = random.choice(reg['spots'])
 
-  # 1. 지점명 생성 (지명 + 수식어 조합으로 중복 방지)
   suffix = random.choice(["Center", "Point", "Square", "Office", "Hub", "Station"])
   branch_name = f"{spot} {suffix}"
 
-  if branch_name in used_names: continue  # 중복 시 재생성
+  if branch_name in used_names: continue
   used_names.add(branch_name)
 
-  # 2. 주소 생성
   address = f"{random.randint(1, 15)}F, {random.randint(10, 800)}, {spot} Road, {reg['city']}, Korea"
-
-  # 3. 위경도
   lat = round(random.uniform(reg['lat'][0], reg['lat'][1]), 8)
   lng = round(random.uniform(reg['lng'][0], reg['lng'][1]), 8)
 
-  # 4. 전화번호 (지역번호 유지하며 중복 방지)
   phone = f"{reg['pref']}-{random.randint(200, 999)}-{random.randint(1000, 9999)}"
   if phone in used_phones: continue
   used_phones.add(phone)
 
-  # 5. 영업시간 (지점별 다양화)
-  # 공항이나 역세권은 일찍 열고 늦게 닫음
   if "Airport" in spot or "Station" in spot:
     open_time = time(random.choice([0, 5, 6]), 0)
     close_time = time(23, 59, 59)
@@ -73,19 +69,35 @@ while count < total_count:
     open_time = time(random.choice([8, 9, 10]), random.choice([0, 30]))
     close_time = time(random.choice([18, 19, 20, 21, 22]), random.choice([0, 30]))
 
-  # 6. 운영 날짜 및 상태
+  # ---------------------------------------------------------
+  # ✅ [날짜 로직 수정]
+  # ---------------------------------------------------------
   status = statuses[count]
-  open_date = date(2020, 1, 1) + timedelta(days=random.randint(0, 2500))
+
+  # 1. open_date: 2020.01.01 ~ 2025.06.30 (균등 분포)
+  open_days_range = (OPEN_LIMIT_DATE - START_DATE).days
+  open_date = START_DATE + timedelta(days=random.randint(0, open_days_range))
+
   close_date = None
+  # status가 CLOSED인 경우에만 close_date 생성
   if status == "CLOSED":
-    close_date = open_date + timedelta(days=random.randint(365, 1000))
+    # 2. close_date: (open_date + 30일) ~ 2025.12.31
+    min_close_date = open_date + timedelta(days=30)
+
+    # 만약 open_date + 30일이 2025.12.31보다 늦으면 범위를 좁힘 (안전 장치)
+    if min_close_date > END_OF_2025:
+      min_close_date = END_OF_2025 - timedelta(days=1)
+
+    close_days_range = (END_OF_2025 - min_close_date).days
+    close_date = min_close_date + timedelta(days=random.randint(0, close_days_range))
 
   val = (branch_name, address, lat, lng, phone, open_time, close_time, open_date, close_date, status)
 
   try:
     cursor.execute(insert_sql, val)
     count += 1
-  except mysql.connector.Error:
+  except mysql.connector.Error as e:
+    print(f"Error: {e}")
     continue
 
 conn.commit()
