@@ -13,16 +13,11 @@ cursor = conn.cursor()
 
 # 2. 지역별 상세 소스
 locations = [
-  {"city": "Seoul", "pref": "02", "spots": ["Gasan Digital", "Gangnam Station", "Hongdae", "Yeouido", "Seoul Station", "Jamsil", "Suyu", "Magok"],
-   "lat": (37.48, 37.58), "lng": (126.88, 127.05)},
-  {"city": "Gyeonggi", "pref": "031", "spots": ["Pangyo", "Suwon Ingye", "Ilsan Lake Park", "Bundang", "Anyang", "Ansan Center", "Pyeongtaek"],
-   "lat": (37.25, 37.40), "lng": (126.95, 127.10)},
-  {"city": "Busan", "pref": "051", "spots": ["Busan Station", "Haeundae", "Seomyeon", "Gimhae Airport", "Gwangalli", "Dongrae"],
-   "lat": (35.10, 35.20), "lng": (129.00, 129.15)},
-  {"city": "Incheon", "pref": "032", "spots": ["Incheon Airport T1", "Incheon Airport T2", "Songdo", "Bupyeong", "Guwol-dong"],
-   "lat": (37.40, 37.50), "lng": (126.45, 126.70)},
-  {"city": "Jeju", "pref": "064", "spots": ["Jeju Airport", "Jeju Auto House", "Jungmun", "Seogwipo Center"],
-   "lat": (33.25, 33.50), "lng": (126.30, 126.85)}
+  {"city": "Seoul", "pref": "02", "spots": ["Gasan Digital", "Gangnam Station", "Hongdae", "Yeouido", "Seoul Station", "Jamsil", "Suyu", "Magok"]},
+  {"city": "Gyeonggi", "pref": "031", "spots": ["Pangyo", "Suwon Ingye", "Ilsan Lake Park", "Bundang", "Anyang", "Ansan Center", "Pyeongtaek"]},
+  {"city": "Busan", "pref": "051", "spots": ["Busan Station", "Haeundae", "Seomyeon", "Gimhae Airport", "Gwangalli", "Dongrae"]},
+  {"city": "Incheon", "pref": "032", "spots": ["Incheon Airport T1", "Incheon Airport T2", "Songdo", "Bupyeong", "Guwol-dong"]},
+  {"city": "Jeju", "pref": "064", "spots": ["Jeju Airport", "Jeju Auto House", "Jungmun", "Seogwipo Center"]}
 ]
 
 # 3. 상태값 설정
@@ -39,8 +34,8 @@ OPEN_LIMIT_DATE = date(2025, 6, 30)
 END_OF_2025 = date(2025, 12, 31)
 
 insert_sql = """
-INSERT INTO BRANCH (branch_name, address, latitude, longitude, phone, open_time, close_time, open_date, close_date, status)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+INSERT INTO BRANCH (branch_name, address, phone, open_time, close_time, open_date, close_date, status)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 """
 
 count = 0
@@ -55,8 +50,6 @@ while count < total_count:
   used_names.add(branch_name)
 
   address = f"{random.randint(1, 15)}F, {random.randint(10, 800)}, {spot} Road, {reg['city']}, Korea"
-  lat = round(random.uniform(reg['lat'][0], reg['lat'][1]), 8)
-  lng = round(random.uniform(reg['lng'][0], reg['lng'][1]), 8)
 
   phone = f"{reg['pref']}-{random.randint(200, 999)}-{random.randint(1000, 9999)}"
   if phone in used_phones: continue
@@ -91,7 +84,7 @@ while count < total_count:
     close_days_range = (END_OF_2025 - min_close_date).days
     close_date = min_close_date + timedelta(days=random.randint(0, close_days_range))
 
-  val = (branch_name, address, lat, lng, phone, open_time, close_time, open_date, close_date, status)
+  val = (branch_name, address, phone, open_time, close_time, open_date, close_date, status)
 
   try:
     cursor.execute(insert_sql, val)

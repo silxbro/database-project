@@ -20,7 +20,7 @@ print("1. Loading policies and metadata into memory...")
 # 대여료 정책 캐시
 cursor.execute("""
     SELECT p.policy_id, r.car_model_id, r.fee_amount, r.start_date, r.end_date 
-    FROM RENTAL_FEE_POLICY r JOIN POLICY p ON p.policy_origin_id = r.policy_id 
+    FROM RENTAL_FEE_POLICY r JOIN POLICY p ON p.policy_id = r.policy_id 
     WHERE p.policy_type = 'RENTAL_FEE'
 """)
 fee_policies = cursor.fetchall()
@@ -28,7 +28,7 @@ fee_policies = cursor.fetchall()
 # 보험료 정책 캐시
 cursor.execute("""
     SELECT p.policy_id, i.car_model_id, i.insurance_type, i.fee_amount, i.start_date, i.end_date 
-    FROM INSURANCE_FEE_POLICY i JOIN POLICY p ON p.policy_origin_id = i.policy_id 
+    FROM INSURANCE_FEE_POLICY i JOIN POLICY p ON p.policy_id = i.policy_id 
     WHERE p.policy_type = 'INSURANCE_FEE'
 """)
 insur_policies = cursor.fetchall()
@@ -36,7 +36,7 @@ insur_policies = cursor.fetchall()
 # 할인 정책 캐시
 cursor.execute("""
     SELECT p.policy_id, d.discount_type, d.discount_amount, d.discount_rate, d.start_date, d.end_date 
-    FROM DISCOUNT_POLICY d JOIN POLICY p ON p.policy_origin_id = d.policy_id 
+    FROM DISCOUNT_POLICY d JOIN POLICY p ON p.policy_id = d.policy_id 
     WHERE p.policy_type = 'DISCOUNT'
 """)
 discount_policies = cursor.fetchall()
@@ -132,9 +132,11 @@ try:
     insur_fee_total = unit_ins * days
 
     temp_details = []
-    temp_details.append({'type': 'RENTAL_FEE', 'amount': rental_fee_total, 'policy': fee_p['policy_id'] if fee_p else None})
-    if insur_fee_total > 0:
-      temp_details.append({'type': 'INSURANCE_FEE', 'amount': insur_fee_total, 'policy': ins_p['policy_id'] if ins_p else None})
+    if fee_p:
+      temp_details.append({'type': 'RENTAL_FEE', 'amount': rental_fee_total, 'policy': fee_p['policy_id']})
+
+    if insur_fee_total > 0 and ins_p:
+      temp_details.append({'type': 'INSURANCE_FEE', 'amount': insur_fee_total, 'policy': ins_p['policy_id']})
 
     # 할인 적용
     discount_amount = Decimal('0')
@@ -145,8 +147,9 @@ try:
       else:
         discount_amount = Decimal(str(disc_p['discount_amount']))
 
-      discount_amount = (discount_amount // 10) * 10 # 원단위 절삭
+      discount_amount = (discount_amount // 10) * 10
       if discount_amount > 0:
+        # [수정 구간] 할인 정책도 존재할 때만 추가
         temp_details.append({'type': 'DISCOUNT_AMOUNT', 'amount': -discount_amount, 'policy': disc_p['policy_id']})
 
     total_rental_payment = rental_fee_total + insur_fee_total - discount_amount
@@ -160,7 +163,7 @@ try:
       cancel_dt = datetime.combine(rental['cancel_date'], datetime.min.time()) + timedelta(hours=random.randint(10, 16))
 
     cursor.execute("""
-            INSERT INTO PAYMENT (rental_id, payment_amount, payment_datetime, cancel_datetime, payment_type, payment_method, payment_method_id, payment_status)
+            INSERT INTO PAYMENT (rental_id, payment_amount, payment_datetime, cancel_datetime, payment_type, payment_method, payment_method_id, status)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (r_id, total_rental_payment, pay_dt, cancel_dt, 'RENTAL', p_method, p_m_id, p_status))
 
@@ -177,7 +180,7 @@ try:
       comp_dt = datetime.combine(rental['return_date'], datetime.min.time()) + timedelta(minutes=random.randint(60, 180))
 
       cursor.execute("""
-                INSERT INTO PAYMENT (rental_id, payment_amount, payment_datetime, payment_type, payment_method, payment_method_id, payment_status)
+                INSERT INTO PAYMENT (rental_id, payment_amount, payment_datetime, payment_type, payment_method, payment_method_id, status)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (r_id, comp_amount, comp_dt, 'COMPENSATION', p_method, p_m_id, 'COMPLETED'))
 
@@ -189,7 +192,7 @@ try:
       add_dt = datetime.combine(rental['return_date'], datetime.min.time()) + timedelta(minutes=15)
 
       cursor.execute("""
-                INSERT INTO PAYMENT (rental_id, payment_amount, payment_datetime, payment_type, payment_method, payment_method_id, payment_status)
+                INSERT INTO PAYMENT (rental_id, payment_amount, payment_datetime, payment_type, payment_method, payment_method_id, status)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (r_id, over_amount, add_dt, 'ADDITIONAL', p_method, p_m_id, 'COMPLETED'))
 

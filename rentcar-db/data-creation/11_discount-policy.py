@@ -67,22 +67,41 @@ def generate_discount_policies():
 # 3. 데이터 삽입
 try:
   discount_data = generate_discount_policies()
-  print(f"오늘({TODAY})까지의 할인 정책을 생성 중...")
-
-  sql = """
-        INSERT INTO DISCOUNT_POLICY 
-        (discount_type, discount_amount, discount_rate, start_date, end_date)
-        VALUES (%s, %s, %s, %s, %s)
-    """
+  print(f"총 {len(discount_data)}건의 할인 정책 생성 중...")
 
   if discount_data:
-    cursor.executemany(sql, discount_data)
-    conn.commit()
-    last_start = discount_data[-1][3]
-    print(f"성공! 총 {len(discount_data)}건 삽입 완료.")
-    print(f"마지막 정책 시작일: {last_start}, 종료일: {FAR_FUTURE}")
+    # 1000건씩 분할 처리 (일반적으로 할인 정책은 건수가 적지만 일관성을 위해 유지)
+    for i in range(0, len(discount_data), 1000):
+      batch = discount_data[i:i+1000]
+
+      # 1. 상위 테이블 POLICY에 'DISCOUNT' 타입으로 먼저 삽입하여 ID 생성
+      super_sql = "INSERT INTO POLICY (policy_type) VALUES ('DISCOUNT')"
+
+      policy_ids = []
+      for _ in batch:
+        cursor.execute(super_sql)
+        policy_ids.append(cursor.lastrowid)
+
+      # 2. 하위 테이블 DISCOUNT_POLICY 삽입 준비 (policy_id 결합)
+      sub_sql = """
+                INSERT INTO DISCOUNT_POLICY 
+                (policy_id, discount_type, discount_amount, discount_rate, start_date, end_date)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+
+      final_batch = []
+      for p_id, data in zip(policy_ids, batch):
+        # 생성된 p_id와 기존 데이터 [type, amount, rate, start, end] 결합
+        final_batch.append((p_id,) + tuple(data))
+
+      # 3. 하위 테이블 대량 삽입
+      cursor.executemany(sub_sql, final_batch)
+      conn.commit()
+
+    print(f"DISCOUNT_POLICY data generation completed!")
+    # --- [수정 및 추가 구간 끝] ---
   else:
-    print("생성된 정책 데이터가 없습니다.")
+    print("생성된 할인 정책 데이터가 없습니다.")
 
 except Exception as e:
   print(f"에러 발생: {e}")

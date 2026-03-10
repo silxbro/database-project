@@ -89,13 +89,33 @@ try:
   policies = generate_insurance_policies()
   print(f"총 {len(policies)}건의 보험료 정책 생성 중...")
 
-  sql = """
-        INSERT INTO INSURANCE_FEE_POLICY (car_model_id, insurance_type, fee_amount, start_date, end_date)
-        VALUES (%s, %s, %s, %s, %s)
+  for i in range(0, len(policies), 1000):
+    batch = policies[i:i+1000]
+
+    # 1. 상위 테이블 POLICY에 정책 타입만큼 먼저 삽입
+    # executemany를 사용하기 위해 튜플 리스트 생성
+    super_sql = "INSERT INTO POLICY (policy_type) VALUES ('INSURANCE_FEE')"
+
+    # 1000건씩 끊어서 처리할 때, 각 정책마다 POLICY 레코드를 하나씩 생성해야 함
+    policy_ids = []
+    for _ in batch:
+      cursor.execute(super_sql)
+      policy_ids.append(cursor.lastrowid) # 생성된 ID 순서대로 보관
+
+    # 2. 하위 테이블 INSURANCE_FEE_POLICY 삽입 준비
+    # 기존 (m_id, fee, start, end) 구조 앞에 추출한 policy_id를 붙여줌
+    sub_sql = """
+            INSERT INTO INSURANCE_FEE_POLICY (policy_id, car_model_id, insurance_type, fee_amount, start_date, end_date)
+            VALUES (%s, %s, %s, %s, %s, %s)
     """
 
-  for i in range(0, len(policies), 1000):
-    cursor.executemany(sql, policies[i:i+1000])
+    # policy_ids와 기존 batch 데이터를 결합
+    final_batch = []
+    for p_id, data in zip(policy_ids, batch):
+      final_batch.append((p_id,) + data)
+
+    # 3. 하위 테이블에 대량 삽입
+    cursor.executemany(sub_sql, final_batch)
     conn.commit()
 
   print("INSURANCE_FEE_POLICY data generation completed!")

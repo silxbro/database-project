@@ -53,7 +53,7 @@ def generate_accidents():
   accident_records = []
 
   # 30% of eligible rentals
-  target_count = int(len(rentals) * 0.3)
+  target_count = int(len(rentals) * 0.1) # 사고율 10% 가정
   target_rentals = random.sample(rentals, target_count)
 
   print(f"Generating accident data (Total target rentals: {target_count})...")

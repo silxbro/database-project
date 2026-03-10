@@ -78,7 +78,7 @@ normal_status_choices = ['ACTIVE'] * 7 + ['ON_LEAVE'] + ['RETIRED'] * 2
 # 직원 데이터 생성
 # =========================
 for branch_id in branch_ids:
-  num_staff = random.randint(5, 20)
+  num_staff = random.randint(10, 20)
 
   # 1. 지점별 직급 리스트 (HEAD 1명 고정)
   positions = ['HEAD'] + ['MANAGER'] * random.randint(1, 3)

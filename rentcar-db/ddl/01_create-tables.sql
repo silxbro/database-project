@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS PAYMENT (
     payment_datetime   DATETIME NOT NULL DEFAULT NOW(),
     cancel_datetime    DATETIME NULL,
     payment_type       ENUM('RENTAL', 'COMPENSATION', 'ADDITIONAL') NOT NULL,
-    ayment_method     ENUM('CREDIT_CARD', 'DEBIT_CARD', 'BANK_TRANSFER', 'EASY_PAYMENT') NOT NULL,
+    payment_method     ENUM('CREDIT_CARD', 'DEBIT_CARD', 'BANK_TRANSFER', 'EASY_PAYMENT') NOT NULL,
     payment_method_id  VARCHAR(50) NOT NULL,
     status             ENUM('COMPLETED', 'CANCELED') NOT NULL DEFAULT 'COMPLETED',
     PRIMARY KEY (payment_id)
